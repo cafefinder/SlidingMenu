@@ -74,9 +74,9 @@ public class SlidingActivityHelper {
 			public void run() {
 				if (open) {
 					if (secondary) {
-						mSlidingMenu.showSecondaryMenu(false);
+						mSlidingMenu.showRightMenu(false);
 					} else {
-						mSlidingMenu.showMenu(false);
+						mSlidingMenu.showLeftMenu(false);
 					}
 				} else {
 					mSlidingMenu.showContent(false);					
@@ -123,7 +123,7 @@ public class SlidingActivityHelper {
 	 */
 	public void onSaveInstanceState(Bundle outState) {
 		outState.putBoolean("SlidingActivityHelper.open", mSlidingMenu.isMenuShowing());
-		outState.putBoolean("SlidingActivityHelper.secondary", mSlidingMenu.isSecondaryMenuShowing());
+		outState.putBoolean("SlidingActivityHelper.secondary", mSlidingMenu.isRightMenuShowing());
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class SlidingActivityHelper {
 	 */
 	public void setBehindContentView(View view, LayoutParams layoutParams) {
 		mViewBehind = view;
-		mSlidingMenu.setMenu(mViewBehind);
+		mSlidingMenu.setLeftMenu(mViewBehind);
 	}
 
 	/**
@@ -176,7 +176,7 @@ public class SlidingActivityHelper {
 	 * Toggle the SlidingMenu. If it is open, it will be closed, and vice versa.
 	 */
 	public void toggle() {
-		mSlidingMenu.toggle();
+		mSlidingMenu.toggleLeft();
 	}
 
 	/**
@@ -190,7 +190,7 @@ public class SlidingActivityHelper {
 	 * Open the SlidingMenu and show the menu view.
 	 */
 	public void showMenu() {
-		mSlidingMenu.showMenu();
+		mSlidingMenu.showLeftMenu();
 	}
 
 	/**
@@ -198,7 +198,7 @@ public class SlidingActivityHelper {
 	 * if there is only one.
 	 */
 	public void showSecondaryMenu() {
-		mSlidingMenu.showSecondaryMenu();
+		mSlidingMenu.showRightMenu();
 	}
 
 	/**

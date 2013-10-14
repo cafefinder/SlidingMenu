@@ -1,7 +1,7 @@
 package com.jeremyfeinstein.slidingmenu.lib.app;
 
-import android.app.ListActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
@@ -9,7 +9,7 @@ import android.widget.ListView;
 
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
-public class SlidingListActivity extends ListActivity implements SlidingActivityBase {
+public class SlidingListActivity extends ActionBarActivity implements SlidingActivityBase {
 
 	private SlidingActivityHelper mHelper;
 

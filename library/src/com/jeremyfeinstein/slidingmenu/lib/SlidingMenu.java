@@ -46,7 +46,11 @@ public class SlidingMenu extends RelativeLayout {
 	 * gesture anywhere on the screen
 	 */
 	public static final int TOUCHMODE_FULLSCREEN = 1;
-
+	/** Constant value for use with setTouchModeAbove(). Allows the SlidingMenu to be opened with a swipe
+	 * gesture anywhere on the screen
+	 */
+	public static final int TOUCHMODE_FULLSCREEN_RIGHT = 3;
+	public static final int TOUCHMODE_FULLSCREEN_LEFT = 4;
 	/** Constant value for use with setTouchModeAbove(). Denies the SlidingMenu to be opened with a swipe
 	 * gesture
 	 */
@@ -63,14 +67,12 @@ public class SlidingMenu extends RelativeLayout {
 	/** Constant value for use with setMode(). Puts menus to the left and right of the content.
 	 */
 	public static final int LEFT_RIGHT = 2;
-
+	public static final int NONE = 3;
 	private CustomViewAbove mViewAbove;
 
 	private CustomViewBehind mViewBehind;
 
 	private OnOpenListener mOpenListener;
-	
-	private OnOpenListener mSecondaryOpenListner;
 
 	private OnCloseListener mCloseListener;
 
@@ -214,7 +216,6 @@ public class SlidingMenu extends RelativeLayout {
 		mViewAbove.setOnPageChangeListener(new OnPageChangeListener() {
 			public static final int POSITION_OPEN = 0;
 			public static final int POSITION_CLOSE = 1;
-			public static final int POSITION_SECONDARY_OPEN = 2;
 
 			public void onPageScrolled(int position, float positionOffset,
 					int positionOffsetPixels) { }
@@ -224,8 +225,6 @@ public class SlidingMenu extends RelativeLayout {
 					mOpenListener.onOpen();
 				} else if (position == POSITION_CLOSE && mCloseListener != null) {
 					mCloseListener.onClose();
-				} else if (position == POSITION_SECONDARY_OPEN && mSecondaryOpenListner != null ) {
-					mSecondaryOpenListner.onOpen();
 				}
 			}
 		});
@@ -243,9 +242,9 @@ public class SlidingMenu extends RelativeLayout {
 		}
 		int viewBehind = ta.getResourceId(R.styleable.SlidingMenu_viewBehind, -1);
 		if (viewBehind != -1) {
-			setMenu(viewBehind); 
+			setLeftMenu(viewBehind); 
 		} else {
-			setMenu(new FrameLayout(context));
+			setLeftMenu(new FrameLayout(context));
 		}
 		int touchModeAbove = ta.getInt(R.styleable.SlidingMenu_touchModeAbove, TOUCHMODE_MARGIN);
 		setTouchModeAbove(touchModeAbove);
@@ -371,8 +370,8 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param res the new content
 	 */
-	public void setMenu(int res) {
-		setMenu(LayoutInflater.from(getContext()).inflate(res, null));
+	public void setLeftMenu(int res) {
+		setLeftMenu(LayoutInflater.from(getContext()).inflate(res, null));
 	}
 
 	/**
@@ -380,8 +379,8 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param view The desired content to display.
 	 */
-	public void setMenu(View v) {
-		mViewBehind.setContent(v);
+	public void setLeftMenu(View v) {
+		mViewBehind.setLeftContent(v);
 	}
 
 	/**
@@ -389,7 +388,7 @@ public class SlidingMenu extends RelativeLayout {
 	 * @return the main menu
 	 */
 	public View getMenu() {
-		return mViewBehind.getContent();
+		return mViewBehind.getLeftContent();
 	}
 
 	/**
@@ -398,8 +397,8 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param res the new content
 	 */
-	public void setSecondaryMenu(int res) {
-		setSecondaryMenu(LayoutInflater.from(getContext()).inflate(res, null));
+	public void setRightMenu(int res) {
+		setRightMenu(LayoutInflater.from(getContext()).inflate(res, null));
 	}
 
 	/**
@@ -407,8 +406,8 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param view The desired content to display.
 	 */
-	public void setSecondaryMenu(View v) {
-		mViewBehind.setSecondaryContent(v);
+	public void setRightMenu(View v) {
+		mViewBehind.setRightContent(v);
 		//		mViewBehind.invalidate();
 	}
 
@@ -416,8 +415,8 @@ public class SlidingMenu extends RelativeLayout {
 	 * Retrieves the current secondary menu (right).
 	 * @return the current menu
 	 */
-	public View getSecondaryMenu() {
-		return mViewBehind.getSecondaryContent();
+	public View getRightMenu() {
+		return mViewBehind.getRightContent();
 	}
 
 
@@ -444,7 +443,7 @@ public class SlidingMenu extends RelativeLayout {
 	 * @param mode must be either SlidingMenu.LEFT or SlidingMenu.RIGHT
 	 */
 	public void setMode(int mode) {
-		if (mode != LEFT && mode != RIGHT && mode != LEFT_RIGHT) {
+		if (mode != LEFT && mode != RIGHT && mode != LEFT_RIGHT && mode != NONE) {
 			throw new IllegalStateException("SlidingMenu mode must be LEFT, RIGHT, or LEFT_RIGHT");
 		}
 		mViewBehind.setMode(mode);
@@ -480,8 +479,8 @@ public class SlidingMenu extends RelativeLayout {
 	/**
 	 * Opens the menu and shows the menu view.
 	 */
-	public void showMenu() {
-		showMenu(true);
+	public void showLeftMenu() {
+		showLeftMenu(true);
 	}
 
 	/**
@@ -489,7 +488,7 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param animate true to animate the transition, false to ignore animation
 	 */
-	public void showMenu(boolean animate) {
+	public void showLeftMenu(boolean animate) {
 		mViewAbove.setCurrentItem(0, animate);
 	}
 
@@ -497,8 +496,8 @@ public class SlidingMenu extends RelativeLayout {
 	 * Opens the menu and shows the secondary menu view. Will default to the regular menu
 	 * if there is only one.
 	 */
-	public void showSecondaryMenu() {
-		showSecondaryMenu(true);
+	public void showRightMenu() {
+		showRightMenu(true);
 	}
 
 	/**
@@ -507,7 +506,7 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param animate true to animate the transition, false to ignore animation
 	 */
-	public void showSecondaryMenu(boolean animate) {
+	public void showRightMenu(boolean animate) {
 		mViewAbove.setCurrentItem(2, animate);
 	}
 
@@ -530,8 +529,8 @@ public class SlidingMenu extends RelativeLayout {
 	/**
 	 * Toggle the SlidingMenu. If it is open, it will be closed, and vice versa.
 	 */
-	public void toggle() {
-		toggle(true);
+	public void toggleLeft() {
+		toggleLeft(true);
 	}
 
 	/**
@@ -539,11 +538,24 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @param animate true to animate the transition, false to ignore animation
 	 */
-	public void toggle(boolean animate) {
+	public void toggleLeft(boolean animate) {
 		if (isMenuShowing()) {
 			showContent(animate);
 		} else {
-			showMenu(animate);
+			showLeftMenu(animate);
+		}
+	}
+	/**
+	 * Toggle the SlidingMenu. If it is open, it will be closed, and vice versa.
+	 */
+	public void toggleRight() {
+		toggleRight(true);
+	}
+	public void toggleRight(boolean animate) {
+		if (isRightMenuShowing()) {
+			showContent(animate);
+		} else {
+			showRightMenu(animate);
 		}
 	}
 
@@ -561,7 +573,7 @@ public class SlidingMenu extends RelativeLayout {
 	 *
 	 * @return Whether or not the behind view is showing
 	 */
-	public boolean isSecondaryMenuShowing() {
+	public boolean isRightMenuShowing() {
 		return mViewAbove.getCurrentItem() == 2;
 	}
 
@@ -716,7 +728,7 @@ public class SlidingMenu extends RelativeLayout {
 	 */
 	public void setTouchModeAbove(int i) {
 		if (i != TOUCHMODE_FULLSCREEN && i != TOUCHMODE_MARGIN
-				&& i != TOUCHMODE_NONE) {
+				&& i != TOUCHMODE_NONE && i != TOUCHMODE_FULLSCREEN_LEFT && i != TOUCHMODE_FULLSCREEN_RIGHT) {
 			throw new IllegalStateException("TouchMode must be set to either" +
 					"TOUCHMODE_FULLSCREEN or TOUCHMODE_MARGIN or TOUCHMODE_NONE.");
 		}
@@ -754,7 +766,7 @@ public class SlidingMenu extends RelativeLayout {
 	 * @param d the new shadow drawable
 	 */
 	public void setShadowDrawable(Drawable d) {
-		mViewBehind.setShadowDrawable(d);
+		mViewBehind.setLeftShadowDrawable(d);
 	}
 
 	/**
@@ -772,7 +784,7 @@ public class SlidingMenu extends RelativeLayout {
 	 * @param d the new shadow drawable
 	 */
 	public void setSecondaryShadowDrawable(Drawable d) {
-		mViewBehind.setSecondaryShadowDrawable(d);
+		mViewBehind.setRightShadowDrawable(d);
 	}
 
 	/**
@@ -883,19 +895,8 @@ public class SlidingMenu extends RelativeLayout {
 		mOpenListener = listener;
 	}
 
-	
 	/**
-	 * Sets the OnOpenListner for secondary menu  {@link OnOpenListener#onOpen() OnOpenListener.onOpen()} will be called when the secondary SlidingMenu is opened
-	 * 
-	 * @param listener the new OnOpenListener
-	 */
-	
-	public void setSecondaryOnOpenListner(OnOpenListener listener) {
-		mSecondaryOpenListner = listener;
-	}
-	
-	/**
-	 * Sets the OnCloseListener. {@link OnCloseListener#onClose() OnCloseListener.onClose()} will be called when any one of the SlidingMenu is closed
+	 * Sets the OnCloseListener. {@link OnCloseListener#onClose() OnCloseListener.onClose()} will be called when the SlidingMenu is closed
 	 *
 	 * @param listener the new setOnCloseListener
 	 */
@@ -1013,8 +1014,8 @@ public class SlidingMenu extends RelativeLayout {
 					Log.v(TAG, "changing layerType. hardware? " + (layerType == View.LAYER_TYPE_HARDWARE));
 					getContent().setLayerType(layerType, null);
 					getMenu().setLayerType(layerType, null);
-					if (getSecondaryMenu() != null) {
-						getSecondaryMenu().setLayerType(layerType, null);
+					if (getRightMenu() != null) {
+						getRightMenu().setLayerType(layerType, null);
 					}
 				}
 			});

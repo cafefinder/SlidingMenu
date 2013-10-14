@@ -34,7 +34,7 @@ import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu.OnOpenedListener;
 public class CustomViewAbove extends ViewGroup {
 
 	private static final String TAG = "CustomViewAbove";
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	private static final boolean USE_CACHE = false;
 
@@ -222,7 +222,7 @@ public class CustomViewAbove extends ViewGroup {
 			return;
 		}
 
-		item = mViewBehind.getMenuPage(item);
+		//item = mViewBehind.getMenuPage(item);
 
 		final boolean dispatchSelected = mCurItem != item;
 		mCurItem = item;
@@ -315,11 +315,12 @@ public class CustomViewAbove extends ViewGroup {
 	}
 
 	private int getLeftBound() {
-		return mViewBehind.getAbsLeftBound(mContent);
+		return mViewBehind.getAbsLeftBound(mContent, mCurItem);
 	}
 
 	private int getRightBound() {
-		return mViewBehind.getAbsRightBound(mContent);
+		Log.e("rigyht bound: ", "" + mViewBehind.getAbsRightBound(mContent, mCurItem));
+		return mViewBehind.getAbsRightBound(mContent, mCurItem);
 	}
 
 	public int getContentLeft() {
@@ -343,7 +344,7 @@ public class CustomViewAbove extends ViewGroup {
 		if (mViewBehind == null) {
 			return 0;
 		} else {
-			return mViewBehind.getBehindWidth();
+			return mViewBehind.getLeftBehindWidth();
 		}
 	}
 
@@ -592,7 +593,7 @@ public class CustomViewAbove extends ViewGroup {
 	private boolean thisSlideAllowed(float dx) {
 		boolean allowed = false;
 		if (isMenuOpen()) {
-			allowed = mViewBehind.menuOpenSlideAllowed(dx);
+			allowed = mViewBehind.menuOpenSlideAllowed(dx, mCurItem, mContent);
 		} else {
 			allowed = mViewBehind.menuClosedSlideAllowed(dx);
 		}
@@ -618,21 +619,33 @@ public class CustomViewAbove extends ViewGroup {
 
 		final int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
 
-		if (DEBUG)
+		if (DEBUG) {
 			if (action == MotionEvent.ACTION_DOWN)
 				Log.v(TAG, "Received ACTION_DOWN");
+			if (action == MotionEvent.ACTION_CANCEL)
+				Log.v(TAG, "Received ACTION_CANCEL");
+			if (action == MotionEvent.ACTION_UP)
+				Log.v(TAG, "Received ACTION_UP");
+			if (action == MotionEvent.ACTION_UP)
+				Log.v(TAG, "Received ACTION_MOVE");
+		}
 
 		if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP
 				|| (action != MotionEvent.ACTION_DOWN && mIsUnableToDrag)) {
 			endDrag();
+			//TODO 디버그를 위해서 코드 수정하다가 작못 수정하였는데 제대로 동작한다.
+			//if (action == MotionEvent.ACTION_UP)
+				
 			return false;
 		}
 
 		switch (action) {
 		case MotionEvent.ACTION_MOVE:
+			Log.v(TAG, "Received ACTION_MOVE");
 			determineDrag(ev);
 			break;
 		case MotionEvent.ACTION_DOWN:
+			Log.v(TAG, " MotionEvent.ACTION_DOWN");
 			int index = MotionEventCompat.getActionIndex(ev);
 			mActivePointerId = MotionEventCompat.getPointerId(ev, index);
 			if (mActivePointerId == INVALID_POINTER)
@@ -643,9 +656,11 @@ public class CustomViewAbove extends ViewGroup {
 				mIsBeingDragged = false;
 				mIsUnableToDrag = false;
 				if (isMenuOpen() && mViewBehind.menuTouchInQuickReturn(mContent, mCurItem, ev.getX() + mScrollX)) {
+					Log.v(TAG, " mQuickReturn");
 					mQuickReturn = true;
 				}
 			} else {
+				Log.v(TAG, " mIsUnableToDrag");
 				mIsUnableToDrag = true;
 			}
 			break;
@@ -689,6 +704,7 @@ public class CustomViewAbove extends ViewGroup {
 			 * If being flinged and user touches, stop the fling. isFinished
 			 * will be false if being flinged.
 			 */
+			Log.v(TAG, " MotionEvent.ACTION_DOWN");
 			completeScroll();
 
 			// Remember where the motion event started
@@ -697,8 +713,10 @@ public class CustomViewAbove extends ViewGroup {
 			mLastMotionX = mInitialMotionX = ev.getX();
 			break;
 		case MotionEvent.ACTION_MOVE:
+			Log.v(TAG, " MotionEvent.ACTION_MOVE");
 			if (!mIsBeingDragged) {	
 				determineDrag(ev);
+				Log.v(TAG, " mIsUnableToDrag: " + mIsUnableToDrag);
 				if (mIsUnableToDrag)
 					return false;
 			}
@@ -726,6 +744,7 @@ public class CustomViewAbove extends ViewGroup {
 			}
 			break;
 		case MotionEvent.ACTION_UP:
+			Log.v(TAG, " MotionEvent.ACTION_UP");
 			if (mIsBeingDragged) {
 				final VelocityTracker velocityTracker = mVelocityTracker;
 				velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
@@ -748,6 +767,7 @@ public class CustomViewAbove extends ViewGroup {
 				mActivePointerId = INVALID_POINTER;
 				endDrag();
 			} else if (mQuickReturn && mViewBehind.menuTouchInQuickReturn(mContent, mCurItem, ev.getX() + mScrollX)) {
+				Log.v(TAG, " mQuickReturn");
 				// close the menu
 				setCurrentItem(1);
 				endDrag();
@@ -778,6 +798,9 @@ public class CustomViewAbove extends ViewGroup {
 	}
 	
 	private void determineDrag(MotionEvent ev) {
+		if (DEBUG) {
+			Log.v(TAG, "determineDrag");
+		}
 		final int activePointerId = mActivePointerId;
 		final int pointerIndex = getPointerIndex(ev, activePointerId);
 		if (activePointerId == INVALID_POINTER)
@@ -788,13 +811,20 @@ public class CustomViewAbove extends ViewGroup {
 		final float y = MotionEventCompat.getY(ev, pointerIndex);
 		final float dy = y - mLastMotionY;
 		final float yDiff = Math.abs(dy);
+
 		if (xDiff > (isMenuOpen()?mTouchSlop/2:mTouchSlop) && xDiff > yDiff && thisSlideAllowed(dx)) {		
 			startDrag();
+			Log.v(TAG, "drag start");
 			mLastMotionX = x;
 			mLastMotionY = y;
+			if (DEBUG) {
+				Log.v(TAG, "mLastMotionX " + x);
+				Log.v(TAG, "mLastMotionY " + y);
+			}
 			setScrollingCacheEnabled(true);
 			// TODO add back in touch slop check
 		} else if (xDiff > mTouchSlop) {
+			Log.v(TAG, "mIsUnableToDrag TRUE");
 			mIsUnableToDrag = true;
 		}
 	}
@@ -909,6 +939,7 @@ public class CustomViewAbove extends ViewGroup {
 						y + scrollY >= child.getTop() && y + scrollY < child.getBottom() &&
 						canScroll(child, true, dx, x + scrollX - child.getLeft(),
 								y + scrollY - child.getTop())) {
+					
 					return true;
 				}
 			}
